@@ -22,9 +22,13 @@ function App() {
   const numQuestions = questions.length;
 
   useEffect(() => {
-    fetch("http://localhost:8000/questions")
+    fetch(
+      "https://gist.githubusercontent.com/LogiCule/db68ccb45c50fa602523e8a4a52bcf2f/raw/questions.json"
+    )
       .then((res) => res.json())
-      .then((data) => dispatch({ type: "dataReceived", payload: data }))
+      .then((data) =>
+        dispatch({ type: "dataReceived", payload: data.questions })
+      )
       .catch(() => dispatch({ type: "dataFailed" }));
   }, []);
 
