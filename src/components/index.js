@@ -1,5 +1,9 @@
 export { default as DateCounter } from "./DateCounter";
 export { default as Error } from "./Error";
+export { default as FinishedScreen } from "./FinishedScreen";
 export { default as Header } from "./Header";
 export { default as Loader } from "./Loader";
+export { default as NextButton } from "./NextButton";
+export { default as Options } from "./Options";
 export { default as StartScreen } from "./StartScreen";
+export { default as Question } from "./Question";
