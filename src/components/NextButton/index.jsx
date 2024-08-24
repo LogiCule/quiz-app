@@ -6,7 +6,8 @@ const NextButton = ({ dispatch, answer, index, numQ }) => {
     <button
       className="btn btn-ui"
       onClick={() => {
-        dispatch({ type: "next" });
+        if (index !== numQ - 1) dispatch({ type: "next" });
+        else dispatch({ type: "finish" });
       }}
     >
       {index !== numQ - 1 ? "Next" : "Finish"}

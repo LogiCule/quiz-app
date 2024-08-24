@@ -7,6 +7,7 @@ import {
   NextButton,
   Question,
   StartScreen,
+  Timer,
 } from "./components";
 import Progress from "./components/Progress";
 
@@ -17,6 +18,8 @@ const initState = {
   answer: null,
   score: 0,
   totalCorrect: 0,
+  highscore: 0,
+  secleft: 450,
 };
 
 function reducer(state, action) {
@@ -27,14 +30,24 @@ function reducer(state, action) {
     case "dataFailed":
       return { ...state, status: "error" };
     case "start":
-      return { ...state, status: "active" };
+      return {
+        ...initState,
+        questions: state.questions,
+        highscore: state.highscore,
+        status: "active",
+      };
     case "next":
       return {
         ...state,
         answer: null,
         index: state.index + 1,
-        status:
-          state.index + 1 === state.questions.length ? "finished" : "active",
+      };
+    case "finish":
+      return {
+        ...state,
+        status: "finished",
+        highscore:
+          state.score > state.highscore ? state.score : state.highscore,
       };
     case "setAnswer": {
       const question = state.questions[state.index];
@@ -47,6 +60,19 @@ function reducer(state, action) {
         totalCorrect: state.totalCorrect + (points == 0 ? 0 : 1),
       };
     }
+    case "restart":
+      return {
+        ...initState,
+        questions: state.questions,
+        highscore: state.highscore,
+        status: "ready",
+      };
+    case "tick":
+      return {
+        ...state,
+        secleft: state.secleft - 1,
+        status: state.secleft - 1 === 0 ? "finished" : state.status,
+      };
 
     default:
       return state;
@@ -55,7 +81,7 @@ function reducer(state, action) {
 
 function App() {
   const [state, dispatch] = useReducer(reducer, initState);
-  const { questions, status, index, answer, score } = state;
+  const { questions, status, index, answer, score, highscore, secleft } = state;
   const totalPoints = questions.reduce((acc, val) => acc + val.points, 0);
   const numQ = questions.length;
 
@@ -96,17 +122,25 @@ function App() {
               answer={answer}
               dispatch={dispatch}
             />
-            <NextButton
-              dispatch={dispatch}
-              answer={answer}
-              numQ={numQ}
-              index={index}
-            />
+            <footer>
+              <Timer dispatch={dispatch} secleft={secleft} />
+              <NextButton
+                dispatch={dispatch}
+                answer={answer}
+                numQ={numQ}
+                index={index}
+              />
+            </footer>
           </>
         )}
 
         {status === "finished" && (
-          <FinishedScreen score={score} totalPoints={totalPoints} />
+          <FinishedScreen
+            score={score}
+            totalPoints={totalPoints}
+            highscore={highscore}
+            dispatch={dispatch}
+          />
         )}
       </main>
     </div>
