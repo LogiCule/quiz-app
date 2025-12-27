@@ -1,224 +1,174 @@
-@import url("https://fonts.googleapis.com/css2?family=Codystar&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
-:root {
-  --color-darkest: #343a40;
-  --color-dark: #495057;
-  --color-medium: #ced4da;
-  --color-light: #f1f3f5;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  --color-theme: #1098ad;
-  --color-accent: #ffa94d;
+@layer base {
+  :root {
+    --background: 220 25% 8%;
+    --foreground: 210 20% 98%;
+    
+    --card: 220 20% 12%;
+    --card-foreground: 210 20% 98%;
+    
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 20% 98%;
+    
+    --primary: 200 90% 45%;
+    --primary-foreground: 210 20% 98%;
+    
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 210 20% 98%;
+    
+    --muted: 220 15% 20%;
+    --muted-foreground: 215 15% 65%;
+    
+    --accent: 190 85% 50%;
+    --accent-foreground: 220 25% 8%;
+    
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 210 20% 98%;
+    
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 200 90% 45%;
+    
+    --radius: 0.5rem;
+    
+    /* Custom quiz colors */
+    --correct: 142 70% 45%;
+    --incorrect: 0 70% 55%;
+    --warning: 38 90% 55%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1419 100%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer components {
+  /* Glassmorphism effect */
+  .glass {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .glass-strong {
+    @apply backdrop-blur-2xl bg-white/10 border border-white/20;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-blue-500;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-blue-500/30 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-blue-500/50;
+  }
 }
 
-html {
-  font-size: 62.5%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+@layer utilities {
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.4s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Glow effect */
+  .glow {
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+  }
+
+  .glow-strong {
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.5), 0 0 60px rgba(56, 189, 248, 0.2);
+  }
 }
 
-body {
-  min-height: 100vh;
-  color: var(--color-light);
-  background-color: var(--color-darkest);
-  padding: 3.2rem;
-}
-
-.app {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.main {
-  width: 50rem;
-}
-
-.app-header {
-  width: 66rem;
-  margin-bottom: 4rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.error {
-  text-align: center;
-  font-size: 1.6rem;
-  font-weight: 500;
-  padding: 2rem;
-  background-color: #495057;
-  border-radius: 100px;
-}
-
-img {
-  width: 14rem;
-}
-
-h1 {
-  font-family: "Codystar";
-  font-size: 5.6rem;
-}
-
-h2 {
-  font-size: 3.6rem;
-  margin-bottom: 2rem;
-}
-
-h3 {
-  font-size: 2.4rem;
-  font-weight: 600;
-  margin-bottom: 4rem;
-}
-
-h4 {
-  font-size: 2.2rem;
-  font-weight: 600;
-  margin-bottom: 2.4rem;
-}
-
-.start {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.progress {
-  margin-bottom: 4rem;
-  display: grid;
-  justify-content: space-between;
-  gap: 1.2rem;
-  grid-template-columns: auto auto;
-  font-size: 1.8rem;
-  color: var(--color-medium);
-}
-
-progress {
-  appearance: none;
-  width: 100%;
-  height: 12px;
-  grid-column: 1 / -1;
-}
-
-::-webkit-progress-bar {
-  background-color: var(--color-medium);
-  border-radius: 100px;
-}
-::-webkit-progress-value {
-  background-color: var(--color-theme);
-  border-radius: 100px;
-}
-
-.btn {
-  display: block;
-  font-family: inherit;
-  color: inherit;
-  font-size: 2rem;
-  border: 2px solid var(--color-dark);
-  background-color: var(--color-dark);
-  padding: 1.2rem 2.4rem;
-  cursor: pointer;
-  border-radius: 100px;
-  transition: 0.3s;
-}
-
-.btn:not([disabled]):hover {
-  background-color: var(--color-darkest);
-}
-
-.btn-option:not([disabled]):hover {
-  transform: translateX(1.2rem);
-}
-
-.btn[disabled]:hover {
-  cursor: not-allowed;
-}
-
-.btn-ui {
-  float: right;
-}
-
-.options {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  margin-bottom: 3.2rem;
-}
-
-.btn-option {
-  width: 100%;
-  text-align: left;
-}
-
-.btn-option.correct {
-  background-color: var(--color-theme);
-  border: 2px solid var(--color-theme);
-  color: var(--color-light);
-}
-.btn-option.wrong {
-  background-color: var(--color-accent);
-  border: 2px solid var(--color-accent);
-  color: var(--color-light);
-}
-
-.answer {
-  transform: translateX(2rem);
-}
-
-.result {
-  background-color: var(--color-theme);
-  color: var(--color-light);
-  border-radius: 100px;
-  text-align: center;
-  padding: 2rem 0;
-  font-size: 2rem;
-  font-weight: 500;
-  margin-bottom: 1.6rem;
-}
-
-.result span {
-  font-size: 2.2rem;
-  margin-right: 4px;
-}
-
-.highscore {
-  font-size: 1.8rem;
-  text-align: center;
-  margin-bottom: 4.8rem;
-}
-
-.loader-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 4rem;
-  gap: 1.6rem;
-
-  color: var(--color-medium);
-  font-size: 1.4rem;
-}
-
-.timer {
-  float: left;
-  font-size: 1.8rem;
-  color: var(--color-medium);
-  border: 2px solid var(--color-dark);
-  padding: 1.35rem 2.8rem;
-  border-radius: 100px;
-}
-
-/* CREDIT: https://dev.to/afif/i-made-100-css-loaders-for-your-next-project-4eje */
+/* Legacy styles for smooth transition - will be removed */
 .loader {
   width: 50px;
   height: 24px;
-  background: radial-gradient(circle closest-side, currentColor 90%, #0000) 0%
-      50%,
+  background: radial-gradient(circle closest-side, currentColor 90%, #0000) 0% 50%,
     radial-gradient(circle closest-side, currentColor 90%, #0000) 50% 50%,
     radial-gradient(circle closest-side, currentColor 90%, #0000) 100% 50%;
   background-size: calc(100% / 3) 12px;
@@ -239,21 +189,4 @@ progress {
   80% {
     background-position: 0% 50%, 50% 50%, 100% 100%;
   }
-}
-
-/* ********** */
-/* First counter example */
-.counter {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  font-size: 2rem;
-  font-weight: bold;
-  margin: 6rem;
-}
-
-.counter * {
-  font-size: inherit;
-  padding: 0.8rem;
 }

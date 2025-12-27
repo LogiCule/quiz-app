@@ -1,4 +1,5 @@
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
+import { fetchQuestions } from "./services/triviaApi";
 import {
   Error,
   FinishedScreen,
@@ -8,47 +9,84 @@ import {
   Question,
   StartScreen,
   Timer,
+  Progress,
 } from "./components";
-import Progress from "./components/Progress";
+
+// Load high scores from localStorage
+const loadHighScores = () => {
+  const stored = localStorage.getItem('quizHighScores');
+  return stored ? JSON.parse(stored) : { easy: 0, medium: 0, hard: 0 };
+};
+
+// Save high scores to localStorage
+const saveHighScores = (scores) => {
+  localStorage.setItem('quizHighScores', JSON.stringify(scores));
+};
 
 const initState = {
   questions: [],
-  status: "loading",
+  status: "ready", // 'ready', 'loading', 'error', 'active', 'finished'
+  difficulty: null,
   index: 0,
   answer: null,
   score: 0,
   totalCorrect: 0,
-  highscore: 0,
-  secleft: 450,
+  highscores: loadHighScores(), // Changed to object with per-difficulty scores
+  secleft: 300, // 5 minutes
 };
 
 function reducer(state, action) {
   const { type, payload } = action;
+  
   switch (type) {
+    case "setDifficulty":
+      return { ...state, difficulty: payload };
+      
+    case "dataLoading":
+      return { ...state, status: "loading" };
+      
     case "dataReceived":
-      return { ...state, questions: payload, status: "ready" };
+      return { 
+        ...state, 
+        questions: payload, 
+        status: "active",
+        secleft: payload.length * 30 // 30 seconds per question
+      };
+      
     case "dataFailed":
       return { ...state, status: "error" };
+      
     case "start":
       return {
-        ...initState,
-        questions: state.questions,
-        highscore: state.highscore,
-        status: "active",
+        ...state,
+        status: "loading",
       };
+      
     case "next":
       return {
         ...state,
         answer: null,
         index: state.index + 1,
       };
-    case "finish":
+      
+    case "finish": {
+      const currentDifficultyScore = state.highscores[state.difficulty] || 0;
+      const newHighScore = state.score > currentDifficultyScore ? state.score : currentDifficultyScore;
+      const updatedHighScores = {
+        ...state.highscores,
+        [state.difficulty]: newHighScore
+      };
+      
+      // Save to localStorage
+      saveHighScores(updatedHighScores);
+      
       return {
         ...state,
         status: "finished",
-        highscore:
-          state.score > state.highscore ? state.score : state.highscore,
+        highscores: updatedHighScores,
       };
+    }
+      
     case "setAnswer": {
       const question = state.questions[state.index];
       const points = payload === question.correctOption ? question.points : 0;
@@ -57,16 +95,17 @@ function reducer(state, action) {
         ...state,
         answer: payload,
         score: state.score + points,
-        totalCorrect: state.totalCorrect + (points == 0 ? 0 : 1),
+        totalCorrect: state.totalCorrect + (points === 0 ? 0 : 1),
       };
     }
+    
     case "restart":
       return {
         ...initState,
-        questions: state.questions,
-        highscore: state.highscore,
+        highscores: state.highscores,
         status: "ready",
       };
+      
     case "tick":
       return {
         ...state,
@@ -81,33 +120,49 @@ function reducer(state, action) {
 
 function App() {
   const [state, dispatch] = useReducer(reducer, initState);
-  const { questions, status, index, answer, score, highscore, secleft } = state;
+  const [showEndDialog, setShowEndDialog] = useState(false);
+  const { questions, status, difficulty, index, answer, score, highscores, secleft } = state;
   const totalPoints = questions.reduce((acc, val) => acc + val.points, 0);
   const numQ = questions.length;
 
-  useEffect(() => {
-    fetch(
-      "https://gist.githubusercontent.com/LogiCule/db68ccb45c50fa602523e8a4a52bcf2f/raw/questions.json"
-    )
-      .then((res) => res.json())
-      .then((data) =>
-        dispatch({ type: "dataReceived", payload: data.questions })
-      )
-      .catch(() => dispatch({ type: "dataFailed" }));
-  }, []);
+  // Fetch questions when difficulty is selected and start is clicked
+  async function handleStart(selectedDifficulty) {
+    dispatch({ type: "setDifficulty", payload: selectedDifficulty });
+    dispatch({ type: "dataLoading" });
+    
+    try {
+      const data = await fetchQuestions({ difficulty: selectedDifficulty });
+      dispatch({ type: "dataReceived", payload: data });
+    } catch (error) {
+      console.error("Failed to fetch questions:", error);
+      dispatch({ type: "dataFailed" });
+    }
+  }
+
+  const handleEndQuiz = () => {
+    setShowEndDialog(false);
+    dispatch({ type: "finish" });
+  };
 
   return (
-    <div className="app">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
       <Header />
-      <main className="main">
+      <main className="w-full max-w-2xl mx-auto">
         {status === "loading" && <Loader />}
-        {status === "error" && <Error />}
-        {status === "ready" && (
-          <StartScreen
-            numQuestions={numQ}
-            handleStart={() => dispatch({ type: "start" })}
+        
+        {status === "error" && (
+          <Error 
+            onRetry={() => dispatch({ type: "restart" })}
           />
         )}
+        
+        {status === "ready" && (
+          <StartScreen
+            onStart={handleStart}
+            highscores={highscores}
+          />
+        )}
+        
         {status === "active" && (
           <>
             <Progress
@@ -116,21 +171,56 @@ function App() {
               index={index}
               score={score}
               answer={answer}
+              difficulty={difficulty}
             />
             <Question
               question={questions[index]}
               answer={answer}
               dispatch={dispatch}
             />
-            <footer>
+            <footer className="mt-6 flex items-center justify-between gap-3">
               <Timer dispatch={dispatch} secleft={secleft} />
-              <NextButton
-                dispatch={dispatch}
-                answer={answer}
-                numQ={numQ}
-                index={index}
-              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowEndDialog(true)}
+                  className="px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 transition-colors duration-200 border border-red-500/30 rounded-lg hover:border-red-500/50 hover:bg-red-500/10"
+                >
+                  End Quiz
+                </button>
+                <NextButton
+                  dispatch={dispatch}
+                  answer={answer}
+                  numQ={numQ}
+                  index={index}
+                />
+              </div>
             </footer>
+
+            {/* Confirmation Dialog */}
+            {showEndDialog && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="glass-strong border-red-500/30 rounded-xl p-6 max-w-md w-full animate-scale-in">
+                  <h3 className="text-xl font-semibold text-white mb-3">End Quiz Early?</h3>
+                  <p className="text-gray-300 mb-6">
+                    Are you sure you want to quit? Your current score will be saved, but unanswered questions won't count.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowEndDialog(false)}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200 border border-white/10 rounded-lg hover:border-white/20"
+                    >
+                      Continue Quiz
+                    </button>
+                    <button
+                      onClick={handleEndQuiz}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors duration-200 rounded-lg"
+                    >
+                      Yes, End Quiz
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -138,8 +228,12 @@ function App() {
           <FinishedScreen
             score={score}
             totalPoints={totalPoints}
-            highscore={highscore}
+            totalCorrect={state.totalCorrect}
+            numQ={numQ}
+            highscores={highscores}
+            difficulty={difficulty}
             dispatch={dispatch}
+            onPlayAgain={() => handleStart(difficulty)}
           />
         )}
       </main>
